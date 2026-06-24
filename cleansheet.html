@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clean Sheet — World Cup Financial Crime Simulator</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#04120A;--p1:#071A0E;--p2:#0D2418;--bor:#1A3D26;
+  --gold:#F5C518;--gold2:#D4A017;--red:#E63946;--grn:#10B981;--wht:#F1F5F9;
+  --sub:#94A3B8;--dim:#2D5040;--muted:#0F2318;
+  --fh:'Outfit',sans-serif;--fm:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--wht);font-family:var(--fh);min-height:100vh;overflow-x:hidden}
+
+.pitch-bg{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(245,197,24,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(245,197,24,.018) 1px,transparent 1px);
+  background-size:60px 60px;}
+.pitch-lines{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 80% 60% at 50% 50%,rgba(16,185,129,.04) 0%,transparent 70%);}
+.vignette{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 100% 100% at 50% 0%,transparent 30%,rgba(4,18,10,.85) 100%);}
+
+@keyframes up{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes pulse-ring{0%{box-shadow:0 0 0 0 rgba(245,197,24,.5)}70%{box-shadow:0 0 0 14px rgba(245,197,24,0)}100%{box-shadow:0 0 0 0 rgba(245,197,24,0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@keyframes stagger{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes card-in{from{opacity:0;transform:translateY(-60px) rotate(-15deg)}to{opacity:1;transform:translateY(0) rotate(0deg)}}
+@keyframes trophy-in{from{opacity:0;transform:scale(0.3)}to{opacity:1;transform:scale(1)}}
+@keyframes scan{0%{top:-5%}100%{top:105%}}
+@keyframes timer-tick{0%{opacity:1}50%{opacity:.6}100%{opacity:1}}
+@keyframes timer-urgent{0%,100%{color:var(--red);text-shadow:0 0 10px rgba(230,57,70,.5)}50%{color:#FF4444;text-shadow:0 0 20px rgba(230,57,70,.8)}}
+@keyframes pundit-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes panic-flash{0%,100%{background:rgba(230,57,70,.05)}50%{background:rgba(230,57,70,.12)}}
+
+/* VAR OVERLAY */
+#var-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,5,2,.97);align-items:center;justify-content:center;flex-direction:column}
+#var-overlay.active{display:flex;animation:fadeIn .15s ease both}
+.var-screen{border:2px solid rgba(245,197,24,.4);border-radius:16px;max-width:560px;width:92%;background:rgba(4,12,7,.95);padding:44px 40px;text-align:center;position:relative;overflow:hidden}
+.var-screen::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.var-label{font-family:var(--fm);font-size:9px;letter-spacing:.28em;color:rgba(245,197,24,.45);margin-bottom:10px;text-transform:uppercase}
+.var-icon{font-size:56px;margin-bottom:14px;display:block}
+.var-title{font-size:26px;font-weight:900;color:var(--gold);letter-spacing:-.02em;margin-bottom:8px}
+.var-body{font-size:13px;color:rgba(245,197,24,.55);line-height:1.95;text-align:left;background:rgba(245,197,24,.04);border-left:2px solid rgba(245,197,24,.3);padding:14px 16px;border-radius:0 6px 6px 0;margin:16px 0}
+.var-meta{display:flex;gap:16px;justify-content:center;margin-bottom:22px;flex-wrap:wrap}
+.var-meta-item{font-family:var(--fm);font-size:9px;color:rgba(245,197,24,.35);letter-spacing:.08em;text-align:center}
+.var-meta-val{display:block;color:rgba(245,197,24,.7);font-size:11px;font-weight:600;margin-top:2px}
+.var-continue{font-family:var(--fm);font-size:11px;letter-spacing:.1em;background:transparent;border:1px solid rgba(245,197,24,.3);color:rgba(245,197,24,.7);border-radius:6px;padding:10px 28px;cursor:pointer;transition:all .15s;text-transform:uppercase}
+.var-continue:hover{background:rgba(245,197,24,.1);border-color:rgba(245,197,24,.6)}
+
+/* CARD OVERLAY */
+#card-overlay{display:none;position:fixed;inset:0;z-index:250;background:rgba(0,0,0,.85);align-items:center;justify-content:center;flex-direction:column;gap:20px}
+#card-overlay.active{display:flex;animation:fadeIn .1s ease both}
+.card-visual{width:90px;height:128px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:48px;animation:card-in .4s cubic-bezier(.175,.885,.32,1.275) both}
+.card-yellow{background:linear-gradient(145deg,#FFD700,#F5A623);box-shadow:0 0 60px rgba(255,215,0,.6)}
+.card-red{background:linear-gradient(145deg,#E63946,#C1121F);box-shadow:0 0 60px rgba(230,57,70,.6)}
+.card-text{font-size:18px;font-weight:800;color:#fff;letter-spacing:-.01em;text-align:center}
+.card-sub{font-family:var(--fm);font-size:11px;color:rgba(255,255,255,.55);letter-spacing:.1em;text-align:center}
+
+/* HUD / SCOREBOARD */
+#game{display:none;position:relative;z-index:1}
+.scoreboard{background:rgba(4,12,7,.98);border-bottom:1px solid var(--bor);position:sticky;top:0;z-index:80;backdrop-filter:blur(16px)}
+.sb-top{display:flex;align-items:center;justify-content:space-between;padding:8px 20px;border-bottom:1px solid var(--bor)}
+.sb-brand{font-size:13px;font-weight:900;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.sb-brand em{color:var(--gold);font-style:normal}
+.sb-dot{width:7px;height:7px;border-radius:50%;background:var(--gold);animation:pulse 2s infinite;flex-shrink:0}
+.home-btn{font-family:var(--fm);font-size:10px;letter-spacing:.08em;background:transparent;border:none;border-left:1px solid var(--bor);color:rgba(245,197,24,.4);padding:0 14px;cursor:pointer;transition:all .2s;white-space:nowrap;align-self:stretch;display:flex;align-items:center;gap:6px}
+.home-btn:hover{color:rgba(245,197,24,.8)}
+.sb-scores{display:flex;align-items:center;justify-content:center;gap:0;flex:1}
+.sb-team{flex:1;text-align:center;padding:8px 14px;border-right:1px solid var(--bor)}
+.sb-team:last-child{border-right:none}
+.sb-team-name{font-family:var(--fm);font-size:8px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase;margin-bottom:4px}
+.sb-team-val{font-family:var(--fm);font-size:22px;font-weight:700;line-height:1}
+.sb-team-val.gold{color:var(--gold)}
+.sb-team-val.red{color:var(--red)}
+.sb-team-val.grn{color:var(--grn)}
+.sb-divider{padding:8px 16px;font-family:var(--fm);font-size:11px;color:var(--dim);border-right:1px solid var(--bor)}
+.sb-heat-wrap{flex:1.2;padding:8px 14px;display:flex;flex-direction:column;justify-content:center;gap:3px;border-right:1px solid var(--bor)}
+.sb-heat-label{font-family:var(--fm);font-size:7px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase}
+.sb-heat-val{font-family:var(--fm);font-size:14px;font-weight:600;color:var(--gold)}
+.sb-heat-track{height:3px;background:var(--muted);border-radius:2px;overflow:hidden;margin-top:2px}
+.sb-heat-bar{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--grn),var(--gold),var(--red));transition:width .7s cubic-bezier(.4,0,.2,1)}
+.cards-cell{padding:8px 14px;display:flex;flex-direction:column;justify-content:center;gap:4px;border-right:1px solid var(--bor)}
+.cards-label{font-family:var(--fm);font-size:7px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase}
+.cards-row{display:flex;gap:4px}
+.mini-card{width:12px;height:17px;border-radius:2px}
+.mini-yellow{background:#FFD700}
+.mini-red{background:var(--red)}
+
+/* TIMER */
+.timer-cell{padding:8px 16px;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.timer-label{font-family:var(--fm);font-size:7px;letter-spacing:.15em;color:var(--dim);text-transform:uppercase}
+.timer-val{font-family:var(--fm);font-size:20px;font-weight:700;color:var(--gold);line-height:1;transition:color .3s}
+.timer-val.urgent{animation:timer-urgent .6s ease infinite}
+.timer-bar{height:3px;background:var(--muted);border-radius:2px;overflow:hidden;margin-top:2px}
+.timer-fill{height:100%;border-radius:2px;background:var(--grn);transition:width 1s linear,background .5s}
+
+/* BRACKET */
+.bracket-bar{background:rgba(4,12,7,.8);border-bottom:1px solid rgba(26,61,38,.5);padding:6px 20px;display:flex;align-items:center;gap:8px;overflow-x:auto}
+.bracket-item{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.bracket-dot{width:24px;height:24px;border-radius:50%;border:1px solid var(--bor);display:flex;align-items:center;justify-content:center;font-family:var(--fm);font-size:9px;font-weight:700;flex-shrink:0;transition:all .3s}
+.bracket-dot.done{background:var(--gold);border-color:var(--gold);color:#000}
+.bracket-dot.active{background:rgba(245,197,24,.15);border-color:var(--gold);color:var(--gold);animation:pulse-ring 2s infinite}
+.bracket-dot.pending{color:var(--dim)}
+.bracket-label{font-family:var(--fm);font-size:9px;color:var(--dim);white-space:nowrap}
+.bracket-label.active{color:rgba(245,197,24,.7)}
+.bracket-line{width:20px;height:1px;background:var(--bor);flex-shrink:0}
+
+/* WRAP */
+.wrap{max-width:820px;margin:0 auto;padding:36px 20px 100px;position:relative;z-index:1}
+
+/* SCENE */
+.match-badge{display:inline-flex;align-items:center;gap:10px;background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.18);border-radius:6px;padding:5px 14px;font-family:var(--fm);font-size:9px;letter-spacing:.14em;color:rgba(245,197,24,.6);text-transform:uppercase;margin-bottom:16px}
+.match-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 1.5s infinite}
+.scene-title{font-size:clamp(28px,5vw,46px);font-weight:900;letter-spacing:-.03em;line-height:1.04;color:#fff;margin-bottom:10px}
+.scene-desc{font-size:15px;color:var(--sub);line-height:1.8;max-width:640px;font-weight:400;margin-bottom:20px}
+.scene-title em{color:var(--gold);font-style:normal}
+
+/* PUNDIT BOX */
+.pundit-box{background:rgba(245,197,24,.05);border:1px solid rgba(245,197,24,.18);border-radius:8px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:10px;animation:pundit-in .4s ease both}
+.pundit-icon{font-size:22px;flex-shrink:0}
+.pundit-name{font-family:var(--fm);font-size:8px;color:rgba(245,197,24,.4);letter-spacing:.1em;text-transform:uppercase;margin-bottom:3px}
+.pundit-text{font-size:13px;color:rgba(245,197,24,.7);line-height:1.6;font-style:italic}
+
+/* INTEL */
+.intel-box{background:var(--p1);border:1px solid var(--bor);border-left:3px solid rgba(245,197,24,.35);border-radius:10px;padding:12px 16px;margin-bottom:24px;cursor:pointer}
+.intel-toggle{display:flex;align-items:center;justify-content:space-between}
+.intel-label{font-family:var(--fm);font-size:9px;letter-spacing:.15em;color:rgba(245,197,24,.5);display:flex;align-items:center;gap:7px;text-transform:uppercase}
+.intel-arrow{font-family:var(--fm);font-size:10px;color:rgba(245,197,24,.35);transition:transform .2s}
+.intel-arrow.open{transform:rotate(90deg)}
+.intel-text{font-size:12px;color:rgba(148,163,184,.65);line-height:1.85;font-weight:300;margin-top:10px;display:none}
+.intel-text.open{display:block}
+.intel-text strong{color:rgba(245,197,24,.75);font-weight:500}
+
+/* JURISDICTION BADGE */
+.juris-badge{background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.15);border-radius:8px;padding:10px 14px;margin-bottom:20px;display:flex;align-items:center;gap:12px}
+.juris-flag{font-size:22px}
+.juris-info{flex:1}
+.juris-name{font-size:13px;font-weight:700;color:var(--wht);margin-bottom:2px}
+.juris-aml{font-family:var(--fm);font-size:10px;color:rgba(245,197,24,.5)}
+.juris-mult{font-family:var(--fm);font-size:10px;padding:3px 8px;background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.2);color:rgba(245,197,24,.7);border-radius:4px;white-space:nowrap}
+
+/* CHOICES */
+.choices{display:flex;flex-direction:column;gap:10px;margin-bottom:8px}
+.choice-card{background:var(--p1);border:1px solid var(--bor);border-radius:12px;padding:18px 22px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.choice-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;background:transparent;transition:background .2s}
+.choice-card:hover{border-color:rgba(245,197,24,.35);background:rgba(10,24,14,.9);transform:translateX(5px)}
+.choice-card:hover::before{background:var(--gold)}
+.choice-card.panic{animation:panic-flash .3s ease infinite}
+.choice-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:4px}
+.choice-name{font-size:16px;font-weight:700;letter-spacing:-.01em;color:#fff}
+.choice-risk{font-family:var(--fm);font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:4px;white-space:nowrap;flex-shrink:0;margin-top:3px}
+.risk-h{background:rgba(230,57,70,.1);color:rgba(248,113,133,.9);border:1px solid rgba(230,57,70,.22)}
+.risk-m{background:rgba(245,158,11,.08);color:rgba(252,211,77,.9);border:1px solid rgba(245,158,11,.2)}
+.risk-l{background:rgba(16,185,129,.08);color:rgba(52,211,153,.9);border:1px solid rgba(16,185,129,.2)}
+.choice-typology{font-family:var(--fm);font-size:9px;color:rgba(100,116,139,.45);letter-spacing:.06em;margin-bottom:6px}
+.choice-desc{font-size:13px;color:var(--sub);line-height:1.65;font-weight:300;margin-bottom:10px}
+.choice-meta{display:flex;align-items:center;justify-content:space-between}
+.choice-heat-wrap{display:flex;align-items:center;gap:8px;font-family:var(--fm);font-size:10px;color:rgba(245,197,24,.55)}
+.heat-mini-bar{width:60px;height:3px;background:var(--muted);border-radius:2px;overflow:hidden}
+.heat-mini-fill{height:100%;background:linear-gradient(90deg,var(--grn),var(--gold));border-radius:2px}
+.choice-arrow{color:var(--dim);font-size:14px;transition:all .2s}
+.choice-card:hover .choice-arrow{color:var(--gold);transform:translateX(5px)}
+
+/* BACK BTN */
+.back-btn{font-family:var(--fm);font-size:10px;letter-spacing:.08em;background:transparent;border:1px solid var(--bor);color:rgba(245,197,24,.35);border-radius:6px;padding:7px 14px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;margin-bottom:22px}
+.back-btn:hover{border-color:rgba(245,197,24,.25);color:rgba(245,197,24,.7)}
+
+/* RESULT */
+.result-card{background:var(--p1);border:1px solid var(--bor);border-radius:10px;padding:16px 20px;margin-bottom:12px}
+.result-label{font-family:var(--fm);font-size:9px;letter-spacing:.15em;color:var(--dim);margin-bottom:5px;text-transform:uppercase}
+.result-name{font-size:18px;font-weight:800;color:#fff;margin-bottom:4px}
+.result-desc{font-size:13px;color:var(--sub);line-height:1.7;font-weight:300}
+
+.next-btn{font-family:var(--fh);font-size:14px;font-weight:700;background:rgba(245,197,24,.08);color:var(--gold);border:1px solid rgba(245,197,24,.25);border-radius:10px;padding:14px 30px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:10px;margin-top:8px}
+.next-btn:hover{border-color:rgba(245,197,24,.5);background:rgba(245,197,24,.12);transform:translateX(4px)}
+
+/* TERMINAL */
+.terminal-box{background:#020A04;border:1px solid rgba(245,197,24,.18);border-radius:10px;overflow:hidden;font-family:var(--fm);margin-bottom:12px}
+.terminal-header{background:rgba(245,197,24,.06);border-bottom:1px solid rgba(245,197,24,.12);padding:9px 16px;display:flex;align-items:center;justify-content:space-between}
+.terminal-title{font-size:9px;letter-spacing:.15em;color:var(--gold);display:flex;align-items:center;gap:8px;text-transform:uppercase}
+.terminal-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:pulse 1.2s infinite}
+.terminal-meta{font-size:8px;color:rgba(245,197,24,.3);letter-spacing:.08em}
+.terminal-body{padding:14px 16px}
+.t-rule{font-size:9px;color:rgba(245,197,24,.5);letter-spacing:.1em;margin-bottom:3px;display:flex;align-items:center;gap:8px}
+.t-rule::before{content:'▶';font-size:7px}
+.t-name{font-size:11px;font-weight:600;color:rgba(245,197,24,.85);margin-bottom:3px}
+.t-body{font-size:11px;color:rgba(245,197,24,.4);line-height:1.75;font-weight:300;margin-bottom:10px}
+.t-body strong{color:rgba(245,197,24,.7);font-weight:500}
+.t-ref{font-size:9px;color:rgba(245,197,24,.25);display:flex;align-items:center;gap:5px}
+.t-ref::before{content:'REF'}
+
+/* LEARN */
+.learn-box{background:rgba(16,185,129,.03);border:1px solid rgba(16,185,129,.14);border-radius:10px;padding:16px 20px;margin-bottom:20px}
+.learn-label{font-family:var(--fm);font-size:9px;letter-spacing:.15em;color:var(--grn);margin-bottom:8px;display:flex;align-items:center;gap:7px;text-transform:uppercase}
+.learn-label::before{content:'COMPLIANCE INSIGHT //'}
+.learn-body{font-size:12px;color:rgba(52,211,153,.5);line-height:1.85;font-weight:300}
+.ref-tag{font-family:var(--fm);font-size:9px;background:rgba(16,185,129,.07);border:1px solid rgba(16,185,129,.18);color:rgba(52,211,153,.6);border-radius:4px;padding:3px 9px;display:inline-block;margin:4px 4px 0 0}
+
+/* INTRO */
+#intro{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center}
+.intro-radial{position:absolute;top:-10%;left:50%;transform:translateX(-50%);width:700px;height:500px;background:radial-gradient(ellipse,rgba(245,197,24,.07) 0%,transparent 65%);pointer-events:none}
+.trophy-hero{font-size:72px;margin-bottom:12px;animation:trophy-in .6s cubic-bezier(.175,.885,.32,1.275) both;display:block}
+h1{font-size:clamp(56px,10vw,110px);font-weight:900;line-height:.88;letter-spacing:-.05em;color:#fff;margin-bottom:10px;animation:up .5s .1s ease both}
+h1 em{color:var(--gold);font-style:normal;display:block}
+.tagline{font-size:clamp(13px,2vw,16px);color:var(--sub);font-weight:300;line-height:1.85;max-width:480px;margin-bottom:28px;animation:up .5s .18s ease both}
+.intro-stats{display:flex;gap:0;border:1px solid var(--bor);border-radius:10px;overflow:hidden;margin-bottom:28px;animation:up .5s .22s ease both;width:100%;max-width:560px}
+.istat{flex:1;padding:14px 10px;text-align:center;border-right:1px solid var(--bor)}
+.istat:last-child{border-right:none}
+.istat-val{font-family:var(--fm);font-size:18px;font-weight:700;color:var(--gold);display:block;margin-bottom:2px}
+.istat-label{font-size:10px;color:var(--dim);letter-spacing:.03em;line-height:1.4}
+
+.juris-select-wrap{width:100%;max-width:540px;margin-bottom:28px;animation:up .5s .26s ease both}
+.juris-select-label{font-family:var(--fm);font-size:9px;letter-spacing:.15em;color:var(--dim);margin-bottom:10px;text-align:center;text-transform:uppercase}
+.juris-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.juris-btn{background:var(--p1);border:1px solid var(--bor);border-radius:10px;padding:14px 16px;cursor:pointer;transition:all .2s;text-align:left;display:flex;align-items:center;gap:12px}
+.juris-btn:hover{border-color:rgba(245,197,24,.3);background:var(--p2)}
+.juris-btn.active{border-color:rgba(245,197,24,.5);background:rgba(245,197,24,.07)}
+.juris-btn-flag{font-size:24px}
+.juris-btn-info{flex:1}
+.juris-btn-name{font-size:13px;font-weight:700;color:var(--wht);margin-bottom:3px}
+.juris-btn-rating{font-family:var(--fm);font-size:9px;color:var(--dim)}
+.juris-btn-rating em{color:var(--gold);font-style:normal}
+.aml-bar{height:3px;background:var(--muted);border-radius:2px;overflow:hidden;margin-top:5px}
+.aml-fill{height:100%;background:linear-gradient(90deg,var(--grn),var(--gold),var(--red));border-radius:2px;transition:width .4s}
+.disclaimer{background:rgba(245,197,24,.03);border:1px solid rgba(245,197,24,.1);border-radius:10px;padding:10px 16px;max-width:480px;margin-bottom:28px;font-family:var(--fm);font-size:10px;color:rgba(245,197,24,.35);line-height:1.9;animation:up .5s .3s ease both}
+.start-btn{font-family:var(--fh);font-size:16px;font-weight:800;letter-spacing:.03em;background:var(--gold);color:#000;border:none;border-radius:10px;padding:18px 52px;cursor:pointer;transition:all .2s;animation:up .5s .34s ease both}
+.start-btn:hover{background:#FFD700;box-shadow:0 0 60px rgba(245,197,24,.4),0 12px 40px rgba(0,0,0,.5);transform:translateY(-3px)}
+
+/* END */
+#end{display:none;position:relative;z-index:1}
+.end-wrap{max-width:820px;margin:0 auto;padding:56px 24px 100px}
+.outcome-badge{display:inline-flex;align-items:center;gap:10px;border-radius:10px;padding:10px 22px;margin-bottom:20px;font-family:var(--fm);font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:600}
+.ob-champion{background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.4);color:var(--gold)}
+.ob-runnerup{background:rgba(148,163,184,.08);border:1px solid rgba(148,163,184,.28);color:var(--sub)}
+.ob-eliminated{background:rgba(230,57,70,.1);border:1px solid rgba(230,57,70,.3);color:var(--red)}
+.ob-investigated{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.28);color:#F59E0B}
+.end-title{font-size:clamp(36px,6vw,56px);font-weight:900;letter-spacing:-.03em;line-height:1.04;margin-bottom:12px}
+.end-sub{font-size:15px;color:var(--sub);line-height:1.85;max-width:580px;font-weight:300;margin-bottom:32px}
+.score-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:28px}
+.score-card{background:var(--p1);border:1px solid var(--bor);border-radius:10px;padding:16px 14px}
+.score-lbl{font-family:var(--fm);font-size:8px;letter-spacing:.12em;color:var(--dim);margin-bottom:5px;text-transform:uppercase}
+.score-val{font-family:var(--fm);font-size:22px;font-weight:700}
+.end-actions{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:32px}
+.play-again-btn{font-family:var(--fh);font-size:14px;font-weight:800;background:var(--gold);color:#000;border:none;border-radius:10px;padding:14px 32px;cursor:pointer;transition:all .2s}
+.play-again-btn:hover{background:#FFD700;box-shadow:0 0 40px rgba(245,197,24,.35);transform:translateY(-2px)}
+.share-btn{font-family:var(--fh);font-size:14px;font-weight:600;background:rgba(10,102,194,.12);color:#0a66c2;border:1px solid rgba(10,102,194,.3);border-radius:10px;padding:14px 26px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px}
+.share-btn:hover{background:rgba(10,102,194,.22);transform:translateY(-2px)}
+.li-icon-svg{width:16px;height:16px;fill:#0a66c2}
+.credit-line{font-family:var(--fm);font-size:10px;color:var(--dim);line-height:2.2;padding-top:18px;border-top:1px solid var(--bor)}
+.credit-line a{color:var(--sub);text-decoration:none}
+.copy-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--gold);color:#000;font-family:var(--fm);font-size:11px;font-weight:700;padding:10px 20px;border-radius:8px;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.scan-line{position:fixed;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(245,197,24,.08),transparent);z-index:1;animation:scan 8s linear infinite;pointer-events:none}
+
+@media(max-width:700px){
+  .sb-scores{flex-wrap:wrap}
+  .sb-team,.sb-divider{padding:5px 8px}
+  .sb-team-val{font-size:16px}
+  .wrap{padding:20px 14px 80px}
+  .score-grid{grid-template-columns:1fr 1fr}
+  .end-wrap{padding:36px 16px 80px}
+  .juris-grid{grid-template-columns:1fr}
+  .end-actions{flex-direction:column}
+  .play-again-btn,.share-btn{width:100%;justify-content:center}
+  h1{font-size:clamp(48px,13vw,80px)}
+  .bracket-bar{padding:6px 12px}
+  .timer-cell{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="pitch-bg"></div>
+<div class="pitch-lines"></div>
+<div class="vignette"></div>
+<div class="scan-line"></div>
+
+<!-- VAR OVERLAY -->
+<div id="var-overlay">
+  <div class="var-screen">
+    <div class="var-label">📹 VAR — Financial Intelligence Unit · Pattern Recognition System</div>
+    <span class="var-icon" id="var-icon">🔍</span>
+    <div class="var-title" id="var-title">VAR Review Initiated</div>
+    <div class="var-body" id="var-body"></div>
+    <div class="var-meta">
+      <div class="var-meta-item">CASE REF<span class="var-meta-val" id="var-ref">—</span></div>
+      <div class="var-meta-item">STATUS<span class="var-meta-val" style="color:var(--red)">UNDER REVIEW</span></div>
+      <div class="var-meta-item">FILED<span class="var-meta-val" id="var-time">—</span></div>
+    </div>
+    <button class="var-continue" onclick="closeVAR()">GOT IT. KEEP MOVING →</button>
+  </div>
+</div>
+
+<!-- CARD OVERLAY -->
+<div id="card-overlay">
+  <div class="card-visual" id="card-visual"></div>
+  <div class="card-text" id="card-text"></div>
+  <div class="card-sub" id="card-sub"></div>
+</div>
+
+<div id="copy-toast" class="copy-toast">Copied to clipboard ✓</div>
+
+<!-- INTRO -->
+<div id="intro">
+  <div class="intro-radial"></div>
+  <span class="trophy-hero">⚽</span>
+  <h1>Clean<em>Sheet</em></h1>
+  <p class="tagline">FIFA World Cup 2026. The biggest financial crime window in years.<br>You have £1,000,000 in dirty money and 7 matches to clean it.</p>
+
+  <div class="intro-stats">
+    <div class="istat"><span class="istat-val">$1.7bn</span><span class="istat-label">illegal bets<br>per match</span></div>
+    <div class="istat"><span class="istat-val">£100bn</span><span class="istat-label">laundered<br>through UK/yr</span></div>
+    <div class="istat"><span class="istat-val">30s</span><span class="istat-label">to decide<br>each move</span></div>
+    <div class="istat"><span class="istat-val">&lt;1%</span><span class="istat-label">of criminals<br>ever caught</span></div>
+  </div>
+
+  <div class="juris-select-wrap">
+    <div class="juris-select-label">// Pick your operating jurisdiction</div>
+    <div class="juris-grid" id="juris-grid"></div>
+  </div>
+
+  <div class="disclaimer">Educational simulation. Scenarios map to real FATF, NCA, UNODC typologies. Built by a KYC/AML Product Specialist.</div>
+  <button class="start-btn" onclick="startGame()">Kick Off →</button>
+</div>
+
+<!-- GAME -->
+<div id="game">
+  <div class="scoreboard" id="scoreboard">
+    <div class="sb-top">
+      <div class="sb-brand"><div class="sb-dot"></div><em>Clean Sheet</em> — World Cup Financial Crime Simulator</div>
+      <button class="home-btn" onclick="goHome()">⌂ Home</button>
+    </div>
+    <div class="sb-scores">
+      <div class="sb-team">
+        <div class="sb-team-name">💰 Cleaned</div>
+        <div class="sb-team-val grn" id="h-clean">£0</div>
+      </div>
+      <div class="sb-divider">vs</div>
+      <div class="sb-team">
+        <div class="sb-team-name">🔴 Dirty</div>
+        <div class="sb-team-val red" id="h-dirty">£1.00M</div>
+      </div>
+      <div class="sb-heat-wrap">
+        <div class="sb-heat-label">Scrutiny</div>
+        <div class="sb-heat-val" id="h-heat">0%</div>
+        <div class="sb-heat-track"><div class="sb-heat-bar" id="h-bar" style="width:0%"></div></div>
+      </div>
+      <div class="cards-cell">
+        <div class="cards-label">Cards</div>
+        <div class="cards-row" id="cards-row"></div>
+      </div>
+      <div class="timer-cell" id="timer-cell">
+        <div class="timer-label">Decide</div>
+        <div class="timer-val" id="timer-val">30</div>
+        <div class="timer-bar"><div class="timer-fill" id="timer-fill" style="width:100%"></div></div>
+      </div>
+    </div>
+  </div>
+  <div class="bracket-bar" id="bracket-bar"></div>
+  <div class="wrap"><div id="scene"></div></div>
+</div>
+
+<!-- END -->
+<div id="end">
+  <div class="end-wrap">
+    <div id="e-badge"></div>
+    <div class="end-title" id="e-title"></div>
+    <div class="end-sub" id="e-sub"></div>
+    <div class="score-grid" id="e-score"></div>
+    <div class="end-actions">
+      <button class="play-again-btn" onclick="resetGame()">↺ Play Again</button>
+      <button class="share-btn" onclick="shareResult()">
+        <svg class="li-icon-svg" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        Share on LinkedIn
+      </button>
+    </div>
+    <div id="e-learning"></div>
+    <div class="credit-line">Built by <a href="https://linkedin.com/in/nikhil-shinde-55a0a210b" target="_blank">Nikhil Shinde</a> · KYC/AML Product Specialist · <a href="https://nikkiill.github.io/AML-Laundromat-Game/" target="_blank">Play Flagged →</a></div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────
+
+const JURISDICTIONS={
+  uk:{name:'United Kingdom',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',aml:95,mult:1.35,desc:'FATF tier 1. FCA + NCA + UKFIU. Hardest in the world.'},
+  uae:{name:'United Arab Emirates',flag:'🇦🇪',aml:70,mult:1.0,desc:'Improving fast. DFSA active. Still some gaps.'},
+  malta:{name:'Malta',flag:'🇲🇹',aml:55,mult:0.82,desc:'EU member. FIAU oversight. Historically light-touch.'},
+  cayman:{name:'Cayman Islands',flag:'🇰🇾',aml:42,mult:0.65,desc:'Offshore centre. FATF-monitored. Beneficial owner gaps.'}
+};
+
+const ROUNDS=[
+  {id:'g1',label:'Group Stage I',short:'G1'},
+  {id:'g2',label:'Group Stage II',short:'G2'},
+  {id:'g3',label:'Group Stage III',short:'G3'},
+  {id:'r16',label:'Round of 16',short:'R16'},
+  {id:'qf',label:'Quarter-Final',short:'QF'},
+  {id:'sf',label:'Semi-Final',short:'SF'},
+  {id:'f',label:'The Final',short:'FIN'}
+];
+
+// Pundit commentary — shows after each choice
+const COMMENTARY={
+  low:[
+    "Safe as houses. Which, coincidentally, is the next typology.",
+    "Boring. Effective. The NCA's nightmare.",
+    "Clean as a whistle. Suspicious as a goalkeeper who never dives.",
+    "Your accountant approves. Your conscience is on holiday.",
+    "Low heat. High confidence. The ref isn't even looking."
+  ],
+  medium:[
+    "50/50. The ref is having a look.",
+    "Your accountant is sweating. Mildly.",
+    "The FIU just raised an eyebrow. Keep moving.",
+    "Bold. Not reckless. The kind of move you can explain in court.",
+    "Moderate risk. Moderate clean. A very moderate crime."
+  ],
+  high:[
+    "The NCA appreciates your confidence. They're writing it down.",
+    "Absolutely not. And yet, here we are.",
+    "Bold move. The kind that gets documentaries made about you.",
+    "The ref has flagged this. The VAR is reviewing. Good luck.",
+    "You either know exactly what you're doing or you have no idea. Possibly both."
+  ],
+  panic:[
+    "Time's up. You panicked. The system picked for you.",
+    "30 seconds and you froze. Classic.",
+    "Hesitation is its own red flag. The clock didn't wait."
+  ]
+};
+
+const SCENES=[
+  {
+    id:'g1',
+    label:'Group Stage · Match 1 — Placement',
+    title:'The <em>Ticket Operation</em>',
+    desc:'200 touts. 3 host cities. £1,000,000 in cash sitting in holdalls that smell like boot bags. It needs to be in the banking system before the knockout rounds start. Move it.',
+    intel:'FATF flagged World Cup ticket fraud as a high-risk placement vector. Host banks have been issued enhanced monitoring guidance. The threshold that triggers reporting is lower than you think.',
+    choices:[
+      {name:'Corporate Hospitality Structuring',risk:'low',riskLabel:'Low Risk',typology:'SMURFING / STRUCTURING',heat:12,amount:850000,
+        desc:'12 event companies, 3 cities. Deposits split into sub-£8k tranches. Looks like boring corporate entertainment for sponsors.',
+        detect:'New company formations velocity flagged. Beneficial ownership cross-referencing active.',
+        learn:'Structuring is splitting deposits to stay below reporting thresholds. UK MLRs require reporting from £3,000 for MSBs. POCA 2002 s.327 applies.',
+        refs:['FATF Guidance 2023','POCA 2002 s.327','JMLSG Part I 6.3']},
+      {name:'Prepaid Card Network',risk:'medium',riskLabel:'Med Risk',typology:'PREPAID INSTRUMENT ABUSE',heat:22,amount:700000,
+        desc:'300 prepaid cards across host city convenience stores. Move funds between accounts, withdraw at ATMs across three countries.',
+        detect:'Cross-border prepaid velocity flagged by Mastercard monitoring. Host FIU notified.',
+        learn:'FATF Rec 11 covers prepaid card monitoring. UK MLR 2017 requires CDD on loads above €150.',
+        refs:['FATF Rec 11','MLR 2017 Reg 27','Mastercard AML Rules']},
+      {name:'Crypto Conversion (P2P)',risk:'high',riskLabel:'High Risk',typology:'CRYPTO PLACEMENT',heat:32,amount:620000,
+        desc:'Convert to USDT through P2P markets. Non-KYC exchanges. Lighter-touch jurisdictions. Trail disappears. Supposedly.',
+        detect:'OFAC Tornado Cash precedent active. Blockchain analytics monitoring P2P. Travel Rule triggered in EU.',
+        learn:'OFAC sanctioned Tornado Cash in 2022 for $7bn laundered. FATF Rec 16 (Travel Rule) requires originator/beneficiary data on all crypto transfers above $1,000.',
+        refs:['OFAC SDN List 2022','FATF Rec 16','MiCA Art 38']}
+    ]
+  },
+  {
+    id:'g2',
+    label:'Group Stage · Match 2 — Placement',
+    title:'The <em>Betting Syndicate</em>',
+    desc:'Three matches fixed. Odds moved suspiciously. Sportradar noticed. You have £400,000 in winnings that need a convincing origin story — fast.',
+    intel:'UNODC estimates $1.7bn in illegal bets per major World Cup match. Sportradar and ESSA are monitoring line movements in real time. Multiple SARs already filed with host FIUs.',
+    choices:[
+      {name:'Licensed Operator Cycling',risk:'medium',riskLabel:'Med Risk',typology:'ACCOUNT STRUCTURING',heat:20,amount:340000,
+        desc:'40 accounts across licensed EU sportsbooks. Realistic identities. Withdraw below reporting thresholds after a plausible cooling-off period.',
+        detect:'Sportradar integrity system flagged the match. Operator AML teams running account link analysis.',
+        learn:'Licensed gambling operators must file SARs under POCA 2002. MLR 2017 Reg 33 requires EDD on high-risk customers.',
+        refs:['POCA 2002 s.330','MLR 2017 Reg 33','ESSA Integrity Framework']},
+      {name:'Offshore Sportsbook Route',risk:'low',riskLabel:'Low Risk',typology:'OFFSHORE BETTING',heat:14,amount:360000,
+        desc:'Unregulated books in Curaçao and Anjouan. Winnings collected in crypto. Converted to fiat in the UAE. Clean-ish.',
+        detect:'Host FIU issued alert on Curaçao operators. Three similar match patterns flagged this tournament.',
+        learn:'80% of illegal sports betting runs through unlicensed operators. UNODC Sport Integrity 2022 flagged exactly this route.',
+        refs:['UNODC Sport Integrity 2022','FATF Typologies 2023','INTERPOL Notice 2024']},
+      {name:'NFT Winnings Conversion',risk:'medium',riskLabel:'Med Risk',typology:'DIGITAL ASSET LAYERING',heat:18,amount:320000,
+        desc:'Buy official World Cup NFTs with betting winnings. Sell to associates at inflated prices. Proceeds look like digital art sales. This worked better in 2021.',
+        detect:'Platform flagged unusual buy-sell patterns between linked wallets. Blockchain analytics triggered.',
+        learn:'NFT wash trading as a layering method was flagged in FATF\'s 2023 Virtual Assets update. EDD required under MiCA.',
+        refs:['FATF VA Guidance 2023','MiCA Art 68','FCA CP22/20']}
+    ]
+  },
+  {
+    id:'g3',
+    label:'Group Stage · Match 3 — Placement',
+    title:'The <em>Agent Cut</em>',
+    desc:'Two major transfers happening during the tournament. Your network controls one agent. £250,000 "consulting fee" has been baked into the deal. Nobody questions agent fees during a World Cup. Usually.',
+    intel:'EU published a directive on football agent regulation in 2023 but enforcement gaps remain enormous. Payments through intermediaries in Malta, Cyprus and UAE are under increased FCA scrutiny.',
+    choices:[
+      {name:'Malta Sports Management Co.',risk:'low',riskLabel:'Low Risk',typology:'PROFESSIONAL SERVICES LAYERING',heat:10,amount:220000,
+        desc:'Route through a legitimately registered sports management company in Malta. Real client roster. Transaction looks completely standard.',
+        detect:'FIAU Malta issued a sector-wide alert on sports management companies after 14 STRs in Q2 2026.',
+        learn:'Professional services intermediaries are one of FATF\'s top-12 high-risk sectors. The Law Society AML guidance applies to UK-connected agents.',
+        refs:['FATF DNFBP Guidance','FIAU Malta 2024','EU Football Reg 2023']},
+      {name:'Three-Jurisdiction Sub-Agents',risk:'medium',riskLabel:'Med Risk',typology:'CORPORATE LAYERING',heat:18,amount:200000,
+        desc:'Cyprus. UAE. Panama. Three sub-agents, each invoicing a legitimate-looking consultancy fee. Payment chain becomes deliberately opaque.',
+        detect:'Cross-jurisdictional payments flagged. Correspondent bank applied EDD.',
+        learn:'Multi-jurisdiction shell layering is a core Panama Papers typology (11.5m documents, Mossack Fonseca). POCA 2002 s.328.',
+        refs:['Panama Papers — Mossack Fonseca','POCA 2002 s.328','FATF Rec 24']},
+      {name:'Image Rights IP Structure',risk:'high',riskLabel:'High Risk',typology:'IMAGE RIGHTS ABUSE',heat:26,amount:180000,
+        desc:'Reframe the fee as image rights licensing from a Jersey IP company. Player assigns rights. Company licenses them back. Fee looks like legitimate royalty income.',
+        detect:'HMRC issued a spotlight on image rights vehicles in 2023. Jersey FIU running enhanced monitoring on sport IP.',
+        learn:'Image rights structures have been used to reduce tax and obscure beneficial ownership. HMRC Spotlight guidance issued 2023.',
+        refs:['HMRC Spotlight 2023','Jersey FRO Act 2022','FATF Beneficial Ownership Rec 25']}
+    ]
+  },
+  {
+    id:'r16',
+    label:'Round of 16 — Layering',
+    title:'The <em>Sponsorship Shell</em>',
+    desc:'Group stage complete. Money\'s in. Now you need to distance it from where it came from. Your shell company just bought a hospitality rights package. Time to make it look legitimate.',
+    intel:'Shell company sponsorships are an emerging typology at major sporting events. The FCA Financial Crime Guide specifically flags sports sponsorship as high risk. Economic Crime Act 2022 expanded UWO powers significantly.',
+    choices:[
+      {name:'Cayman Fan Experience Co.',risk:'low',riskLabel:'Low Risk',typology:'SHELL COMPANY SPONSORSHIP',heat:14,amount:600000,
+        desc:'A Cayman-registered "fan experience" company acquires the hospitality package. On paper: legitimate B2B. Proceeds flow back as "event income."',
+        detect:'Companies House PSC register cross-referencing incomplete for Cayman entities. ROE filing required if UK property involved.',
+        learn:'Economic Crime Act 2022 created the Register of Overseas Entities, requiring disclosure of beneficial owners for overseas companies in UK transactions.',
+        refs:['ECA 2022 s.3','Companies House ROE','FATF Rec 24']},
+      {name:'Official Merchandise Producer',risk:'medium',riskLabel:'Med Risk',typology:'TRADE-BASED ML',heat:22,amount:550000,
+        desc:'Invest in a licensed World Cup merchandise producer. Inflate invoice values on goods shipped between affiliates. Value transfers across jurisdictions without cash moving.',
+        detect:'HMRC CITEX trade data flagging price anomalies. Wolfsberg Trade Finance alert issued to correspondent banks.',
+        learn:'TBML is one of the three main ML methods identified by FATF. Wolfsberg Group Trade Finance Principles (2019) set the detection standard.',
+        refs:['FATF TBML Report 2020','Wolfsberg Trade Principles 2019','BNP Paribas $8.9bn Settlement']},
+      {name:'UAE Sports Media Buy',risk:'low',riskLabel:'Low Risk',typology:'GEOGRAPHIC RISK LAYERING',heat:11,amount:620000,
+        desc:'Route funds as advertising spend through a UAE-based sports media company with legitimate World Cup broadcast sub-rights. UAE\'s AML framework is improving. Enforcement gaps remain.',
+        detect:'CBUAE issued new AML guidelines this year. DFSA running enhanced scrutiny on media companies.',
+        learn:'Geographic risk is a core EDD trigger under MLR 2017. UAE was removed from the FATF grey list in 2024 after reforms.',
+        refs:['MLR 2017 Reg 33','FATF Grey List 2024','CBUAE AML Regs 2023']}
+    ]
+  },
+  {
+    id:'qf',
+    label:'Quarter-Final — Layering',
+    title:'The <em>Transfer Window</em>',
+    desc:'A real transfer is happening. Your syndicate controls the intermediary. 35% fee inflation baked into the contract. Nobody blinks at transfer fees during a tournament. Right?',
+    intel:'HMRC estimates £500m+ in unpaid tax through image rights and agent fee manipulation in UK football annually. The FCA Financial Crime Guide explicitly references sports payments as professional services risk.',
+    choices:[
+      {name:'Portuguese Intermediary',risk:'low',riskLabel:'Low Risk',typology:'OVER-INVOICING',heat:15,amount:480000,
+        desc:'Route the inflated portion through a Lisbon sports agency with legitimate credentials. Portugal\'s AML framework is compliant. Enforcement capacity is stretched thin.',
+        detect:'IMPIC (Portuguese agent regulator) under-resourced. Banco de Portugal flagging unusual inbound sporting payments.',
+        learn:'Over-invoicing is the most common form of TBML. The criminal inflates a service price; excess flows back as legitimate payment.',
+        refs:['FATF TBML Report 2020','IMPIC Reg Portugal','FCA Financial Crime Guide Ch.3']},
+      {name:'Five-Jurisdiction Image Rights',risk:'medium',riskLabel:'Med Risk',typology:'COMPLEX CORPORATE STRUCTURE',heat:20,amount:440000,
+        desc:'Restructure the player\'s image rights across UK, Malta, Netherlands, Cayman, Singapore. Five layers. Criminal margin embedded in each. Complexity is the disguise.',
+        detect:'Complexity is itself a red flag. MLR 2017 EDD triggers when transaction purpose is unclear and beneficial ownership spans multiple entities.',
+        learn:'Zamira Hajiyeva (NCA UWO, £22m at Harrods) established precedent for UWOs targeting complex offshore PEP structures. ECA 2022 extended these powers.',
+        refs:['NCA v Hajiyeva [2019]','ECA 2022','MLR 2017 Reg 33']},
+      {name:'Crypto Performance Bonuses',risk:'high',riskLabel:'High Risk',typology:'CRYPTO LAYERING',heat:30,amount:380000,
+        desc:'Embed USDC performance bonuses in the player\'s contract. Convert through DeFi. Repatriated as "investment income" via a crypto-friendly bank. What could go wrong.',
+        detect:'Travel Rule applies to all crypto above £1,000. Chainalysis and Elliptic monitoring DeFi flows for OFAC-sanctioned addresses.',
+        learn:'Crypto layering through DeFi is the fastest-growing ML typology. FATF Rec 16 requires crypto exchanges to transmit originator data on all transfers.',
+        refs:['FATF Rec 16','OFAC DeFi Guidance 2023','FCA PS23/6 Crypto AML']}
+    ]
+  },
+  {
+    id:'sf',
+    label:'Semi-Final — Integration',
+    title:'The <em>Stadium Investment</em>',
+    desc:'The money is layered. Now it needs a home that looks respectable. £40bn of stadium construction is happening around you. Pick your exit.',
+    intel:'FATF estimates 30% of global criminal proceeds end up in property. The Economic Crime Act 2022 Register of Overseas Entities specifically targets overseas companies using UK-linked property. Host FIUs are watching construction financing.',
+    choices:[
+      {name:'Stadium District Development',risk:'low',riskLabel:'Low Risk',typology:'REAL ESTATE INTEGRATION',heat:12,amount:820000,
+        desc:'Acquire equity in a commercial development adjacent to a World Cup venue. Construction companies are cash-hungry. Questions about funding are minimal.',
+        detect:'ECA 2022 Register of Overseas Entities filing required. HMRC AMLER guidance applies to UK-connected transactions.',
+        learn:'Real estate integration is the most common ML exit method. FATF 2022 Guidance identifies anonymous purchases and all-cash transactions as primary red flags.',
+        refs:['FATF Real Estate Guidance 2022','ECA 2022 s.3','HMRC AMLER Guidance']},
+      {name:'Sports Bar Franchise (x6)',risk:'medium',riskLabel:'Med Risk',typology:'CASH-INTENSIVE BUSINESS',heat:17,amount:780000,
+        desc:'Open 6 licensed sports bars near World Cup venues with cleaned funds as working capital. High cash volume. Natural commingling point.',
+        detect:'HMRC High Value Dealer registration required above £10k cash acceptance. JMLSG retail guidance applies.',
+        learn:'NatWest case (£264.8m FCA fine) showed how cash-intensive businesses commingle dirty and clean funds at scale. Turnover-based suspicion is a primary trigger.',
+        refs:['FCA v NatWest [2021] — £264.8m','JMLSG Part I','HMRC HVD Registration']},
+      {name:'Youth Football Academy',risk:'low',riskLabel:'Low Risk',typology:'CHARITABLE INTEGRATION',heat:9,amount:840000,
+        desc:'Establish a youth academy in the host country using integrated funds. Charitable status. Good PR. Reduced AML scrutiny in many jurisdictions. Unfortunate but true.',
+        detect:'Charity Commission enhanced monitoring following economic crime guidance. EDD required on donor-funded organisations above £1m in UK.',
+        learn:'Charities as ML vehicles was highlighted in HMRC guidance 2023. Paradoxically, charitable purpose sometimes reduces scrutiny other businesses face.',
+        refs:['HMRC Charity AML 2023','Charity Commission AML 2024','FATF NPML Guidance']}
+    ]
+  },
+  {
+    id:'f',
+    label:'The Final — Integration',
+    title:'The <em>Final Whistle</em>',
+    desc:'One move. Everything ends here. The global spotlight is at maximum. So is financial monitoring. The whole operation comes down to this.',
+    intel:'Integration is where most criminals get caught. The money has moved but the paper trail exists. The goal is a legitimate-looking final destination — one that explains the funds as normal economic activity.',
+    choices:[
+      {name:'Sports Tech Startup (AIM Float)',risk:'medium',riskLabel:'Med Risk',typology:'INVESTMENT INTEGRATION',heat:20,amount:900000,
+        desc:'Seed fund a sports analytics startup with cleaned funds. Float on AIM 18 months later. Your criminal investment becomes a legitimate quoted equity stake.',
+        detect:'FCA conduct unit monitoring AIM listings for unusual shareholder structures. Nomad DD required on seed investors.',
+        learn:'Investment layering through startup funding is a growing typology. FATF 2023 report flagged VC and seed investment as integration vehicles.',
+        refs:['FATF ML Typologies 2023','FCA AIM Regulation','MLR 2017 Reg 18']},
+      {name:'Football Club Minority Stake',risk:'low',riskLabel:'Low Risk',typology:'SPORTS OWNERSHIP ML',heat:13,amount:930000,
+        desc:'15% minority stake in a lower-league club in a FATF-monitored jurisdiction. Football ownership provides legitimate cashflow explanations and reputational cover.',
+        detect:'UEFA Financial Fair Play monitoring. National federation ownership disclosure requirements. ECA 2022 applies to UK-connected acquisitions.',
+        learn:'Football club ownership as ML integration featured in multiple enforcement cases. FATF flagged the sector in its 2018 ML through Football report.',
+        refs:['FATF Football ML Report 2018','UEFA FFP Regulations','ECA 2022']},
+      {name:'World Cup Legacy Foundation',risk:'low',riskLabel:'Low Risk',typology:'CHARITABLE INTEGRATION',heat:10,amount:950000,
+        desc:'Establish a foundation in the host country\'s name. World Cup legacy framing. Donate publicly. Charitable status + public acclaim. The cleanest-looking dirty money.',
+        detect:'Charity Commission EDD above £1m. Charitable inquiry powers under Charities Act 2011. Beneficial owner registers required in most jurisdictions.',
+        learn:'High-profile charitable donations as integration have featured in NCA investigations. Public donations create a trail, but one difficult to challenge without political will.',
+        refs:['Charities Act 2011','NCA Typologies 2024','FATF NPML Guidance 2023']}
+    ]
+  }
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────────
+
+let state={scene:0,heat:0,dirty:1000000,clean:0,cards:{yellow:0,red:0},choices:[],juris:'uk',varShown:false};
+let timerInterval=null;
+let timeLeft=30;
+const TIMER_MAX=30;
+
+// ── SOUND ──────────────────────────────────────────────────────────────────
+
+function beep(freq,duration,vol,type='sine'){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator();
+    const g=ctx.createGain();
+    o.connect(g);g.connect(ctx.destination);
+    o.type=type;o.frequency.value=freq;
+    g.gain.setValueAtTime(vol,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+duration);
+    o.start();o.stop(ctx.currentTime+duration);
+  }catch(e){}
+}
+
+function playWhistle(){beep(1200,.08,.15);setTimeout(()=>beep(1400,.12,.12),100);}
+function playCash(){beep(880,.06,.08,'triangle');setTimeout(()=>beep(1100,.08,.06,'triangle'),80);}
+function playAlarm(){
+  beep(400,.2,.15,'sawtooth');
+  setTimeout(()=>beep(350,.2,.15,'sawtooth'),250);
+  setTimeout(()=>beep(300,.4,.15,'sawtooth'),500);
+}
+function playTick(){beep(600,.04,.05,'square');}
+
+// ── TIMER ──────────────────────────────────────────────────────────────────
+
+function startTimer(){
+  stopTimer();
+  timeLeft=TIMER_MAX;
+  updateTimerDisplay();
+  timerInterval=setInterval(()=>{
+    timeLeft--;
+    updateTimerDisplay();
+    if(timeLeft<=10)playTick();
+    if(timeLeft<=0){
+      stopTimer();
+      autoPanic();
+    }
+  },1000);
+}
+
+function stopTimer(){
+  if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
+  const tv=document.getElementById('timer-val');
+  const tf=document.getElementById('timer-fill');
+  if(tv){tv.classList.remove('urgent');}
+  if(tf){tf.style.background='var(--grn)';}
+}
+
+function updateTimerDisplay(){
+  const tv=document.getElementById('timer-val');
+  const tf=document.getElementById('timer-fill');
+  if(!tv)return;
+  tv.textContent=timeLeft;
+  const pct=(timeLeft/TIMER_MAX)*100;
+  tf.style.width=pct+'%';
+  if(timeLeft<=10){
+    tv.classList.add('urgent');
+    tf.style.background='var(--red)';
+  } else if(timeLeft<=20){
+    tf.style.background='var(--gold)';
+  }
+}
+
+function autoPanic(){
+  // Auto-pick the highest risk option as a panic move
+  const s=SCENES[state.scene];
+  if(!s)return;
+  const cards=document.querySelectorAll('.choice-card');
+  cards.forEach(c=>c.classList.add('panic'));
+  setTimeout(()=>{
+    const highestRiskIdx=s.choices.reduce((best,c,i)=>c.heat>s.choices[best].heat?i:best,0);
+    makeChoice(highestRiskIdx,true);
+  },600);
+}
+
+// ── RENDER ──────────────────────────────────────────────────────────────────
+
+function fmt(n){return n>=1000000?`£${(n/1000000).toFixed(2)}M`:n>=1000?`£${(n/1000).toFixed(0)}k`:`£${n}`}
+
+function renderJurisGrid(){
+  const g=document.getElementById('juris-grid');
+  g.innerHTML=Object.entries(JURISDICTIONS).map(([k,j])=>`
+    <button class="juris-btn${state.juris===k?' active':''}" onclick="selectJuris('${k}')">
+      <span class="juris-btn-flag">${j.flag}</span>
+      <div class="juris-btn-info">
+        <div class="juris-btn-name">${j.name}</div>
+        <div class="juris-btn-rating">AML: <em>${j.aml}/100</em></div>
+        <div class="aml-bar"><div class="aml-fill" style="width:${j.aml}%"></div></div>
+      </div>
+    </button>`).join('');
+}
+
+function selectJuris(k){state.juris=k;renderJurisGrid();}
+
+function renderBracket(){
+  const bar=document.getElementById('bracket-bar');
+  bar.innerHTML=ROUNDS.map((r,i)=>{
+    const done=i<state.scene;const active=i===state.scene;
+    const cls=done?'done':active?'active':'pending';
+    return `<div class="bracket-item">
+      <div class="bracket-dot ${cls}">${done?'✓':r.short}</div>
+      <div class="bracket-label${active?' active':''}">${r.label}</div>
+      ${i<ROUNDS.length-1?'<div class="bracket-line"></div>':''}
+    </div>`;
+  }).join('');
+}
+
+function updateHUD(){
+  document.getElementById('h-clean').textContent=fmt(state.clean);
+  document.getElementById('h-dirty').textContent=fmt(state.dirty);
+  document.getElementById('h-heat').textContent=state.heat+'%';
+  document.getElementById('h-bar').style.width=Math.min(state.heat,100)+'%';
+  const cr=document.getElementById('cards-row');cr.innerHTML='';
+  for(let i=0;i<state.cards.yellow;i++)cr.innerHTML+='<div class="mini-card mini-yellow"></div>';
+  for(let i=0;i<state.cards.red;i++)cr.innerHTML+='<div class="mini-card mini-red"></div>';
+}
+
+function toggleIntel(el){
+  const txt=el.querySelector('.intel-text');
+  const arr=el.querySelector('.intel-arrow');
+  txt.classList.toggle('open');
+  arr.classList.toggle('open');
+}
+
+function renderScene(){
+  const s=SCENES[state.scene];
+  if(!s){endGame();return;}
+  const j=JURISDICTIONS[state.juris];
+  const adjusted=s.choices.map(c=>({...c,heat:Math.min(Math.round(c.heat*j.mult),65)}));
+  const maxH=Math.max(...adjusted.map(c=>c.heat));
+  const rc={high:'risk-h',medium:'risk-m',low:'risk-l'};
+  const backBtn=state.scene>0?`<button class="back-btn" onclick="goBack()">← Back</button>`:'';
+
+  const choicesHTML=adjusted.map((c,i)=>`
+    <div class="choice-card" onclick="makeChoice(${i})">
+      <div class="choice-top">
+        <div class="choice-name">${c.name}</div>
+        <span class="choice-risk ${rc[c.risk]}">${c.riskLabel}</span>
+      </div>
+      <div class="choice-typology">${c.typology}</div>
+      <div class="choice-desc">${c.desc}</div>
+      <div class="choice-meta">
+        <div class="choice-heat-wrap">
+          +${c.heat}% scrutiny
+          <div class="heat-mini-bar"><div class="heat-mini-fill" style="width:${(c.heat/maxH)*100}%"></div></div>
+        </div>
+        <span class="choice-arrow">→</span>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('scene').innerHTML=`
+    <div style="animation:stagger .35s ease both">
+      ${backBtn}
+      <div class="match-badge"><div class="match-badge-dot"></div>${s.label}</div>
+      <div class="scene-title">${s.title}</div>
+      <p class="scene-desc">${s.desc}</p>
+      <div class="juris-badge">
+        <span class="juris-flag">${j.flag}</span>
+        <div class="juris-info">
+          <div class="juris-name">${j.name} — ${j.desc}</div>
+          <div class="juris-aml">AML Rating: ${j.aml}/100 · Heat multiplier: ×${j.mult.toFixed(2)}</div>
+        </div>
+        <div class="juris-mult">×${j.mult.toFixed(2)}</div>
+      </div>
+      <div class="intel-box" onclick="toggleIntel(this)">
+        <div class="intel-toggle">
+          <div class="intel-label">⚽ Scout Report — tap to expand</div>
+          <div class="intel-arrow">▶</div>
+        </div>
+        <div class="intel-text">${s.intel}</div>
+      </div>
+      <div class="choices">${choicesHTML}</div>
+    </div>`;
+  renderBracket();updateHUD();
+  window.scrollTo(0,0);
+  startTimer();
+  playWhistle();
+}
+
+// ── CHOICES ──────────────────────────────────────────────────────────────────
+
+function makeChoice(idx,panicked=false){
+  stopTimer();
+  const s=SCENES[state.scene];
+  const c=s.choices[idx];
+  const j=JURISDICTIONS[state.juris];
+  const actualHeat=Math.min(Math.round(c.heat*j.mult),65);
+  state.choices.push(idx);
+  state.heat=Math.min(state.heat+actualHeat,100);
+  state.dirty-=c.amount;
+  state.clean+=c.amount;
+
+  // Pick pundit line
+  const pool=panicked?COMMENTARY.panic:COMMENTARY[c.risk];
+  const punditLine=pool[Math.floor(Math.random()*pool.length)];
+
+  const nextScene=SCENES[state.scene+1];
+  const nextLabel=nextScene?`Continue to ${ROUNDS[state.scene+1].label} →`:'Final Whistle →';
+  const rc={high:'risk-h',medium:'risk-m',low:'risk-l'};
+
+  document.getElementById('scene').innerHTML=`
+    <div style="animation:stagger .3s ease both">
+      <div class="match-badge"><div class="match-badge-dot"></div>${s.label} · Decision Made</div>
+      <div class="scene-title" style="margin-bottom:16px">Match <em>Analysis</em></div>
+      <div class="pundit-box">
+        <div class="pundit-icon">🎙</div>
+        <div>
+          <div class="pundit-name">Commentator</div>
+          <div class="pundit-text">"${punditLine}"</div>
+        </div>
+      </div>
+      <div class="result-card">
+        <div class="result-label">${panicked?'⏰ Time ran out — auto-selected':'Your move'}</div>
+        <div class="result-name">${c.name}</div>
+        <div class="result-desc">${c.desc}</div>
+      </div>
+      <div class="terminal-box">
+        <div class="terminal-header">
+          <div class="terminal-title"><div class="terminal-dot"></div>FIU Detection Log — ${j.flag} ${j.name}</div>
+          <div class="terminal-meta">CASE #CS-2026-${String(state.scene+1).padStart(4,'0')}</div>
+        </div>
+        <div class="terminal-body">
+          <div class="t-rule">SCRUTINY ADDED</div>
+          <div class="t-name">+${actualHeat}% (${j.name} ×${j.mult.toFixed(2)} multiplier)</div>
+          <div class="t-body">Total scrutiny: <strong>${state.heat}%</strong></div>
+          <div class="t-rule" style="margin-top:8px">TYPOLOGY FLAGGED</div>
+          <div class="t-name">${c.typology}</div>
+          <div class="t-body">${c.detect}</div>
+          <div class="t-ref">${c.refs.join(' · ')}</div>
+        </div>
+      </div>
+      <div class="learn-box">
+        <div class="learn-label"></div>
+        <div class="learn-body">${c.learn}${c.refs.map(r=>`<span class="ref-tag">${r}</span>`).join('')}</div>
+      </div>
+      <button class="next-btn" onclick="nextScene()">${nextLabel}</button>
+    </div>`;
+
+  updateHUD();
+  playCash();
+
+  // Card system
+  if(state.heat>=60&&state.cards.yellow===0&&state.cards.red===0){
+    state.cards.yellow++;
+    setTimeout(()=>showCard('yellow','Yellow Card','Suspicious Activity Report Filed'),900);
+  }
+  if(state.heat>=85&&state.cards.red===0){
+    state.cards.red++;
+    setTimeout(()=>{showCard('red','Red Card — Arrested','Account Frozen · Assets Seized');playAlarm();},1200);
+  }
+
+  // VAR
+  if(state.heat>=65&&!state.varShown){
+    state.varShown=true;
+    setTimeout(()=>showVAR(c),1700);
+  }
+}
+
+function showCard(type,title,sub){
+  const overlay=document.getElementById('card-overlay');
+  const visual=document.getElementById('card-visual');
+  document.getElementById('card-text').textContent=title;
+  document.getElementById('card-sub').textContent=sub;
+  visual.className=`card-visual card-${type}`;
+  visual.textContent=type==='yellow'?'🟨':'🟥';
+  overlay.classList.add('active');
+  setTimeout(()=>overlay.classList.remove('active'),2800);
+}
+
+function showVAR(c){
+  const messages=[
+    `The assistant ref has flagged something.`,
+    `The referee is going to the monitor.`,
+    `...`,
+    `Yeah, that's <strong>${c.typology}</strong>.`,
+    `<br><strong>Detection note:</strong> ${c.detect}`,
+    `<br>This has been referred to the Financial Intelligence Unit. A SAR may be filed.`
+  ];
+  document.getElementById('var-icon').textContent='📹';
+  document.getElementById('var-title').textContent='VAR Review — Checking the Footage';
+  document.getElementById('var-body').innerHTML=messages.join('<br>');
+  document.getElementById('var-ref').textContent=`SAR-2026-${Math.floor(Math.random()*90000+10000)}`;
+  document.getElementById('var-time').textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('var-overlay').classList.add('active');
+}
+
+function closeVAR(){document.getElementById('var-overlay').classList.remove('active');}
+
+function nextScene(){state.scene++;renderScene();}
+
+// ── END GAME ──────────────────────────────────────────────────────────────────
+
+function endGame(){
+  stopTimer();
+  document.getElementById('game').style.display='none';
+  document.getElementById('end').style.display='block';
+  const j=JURISDICTIONS[state.juris];
+  const pct=Math.round((state.clean/1000000)*100);
+  const efficiency=Math.round((state.clean/1000000)*(1-state.heat/250)*100);
+  let outcome,title,sub,badgeClass;
+
+  if(state.heat<25&&state.cards.yellow===0){
+    outcome='🏆 Champion';title='Clean Sheet';badgeClass='ob-champion';
+    sub=`You cleaned ${pct}% of the proceeds without triggering a single SAR. The system never saw you. That puts you in the top tier of simulation runs — and illustrates exactly why detection systems need to go beyond rule-based triggers.`;
+  } else if(state.heat<55&&state.cards.red===0){
+    outcome='🥈 Runner-Up';title='Mostly Clean';badgeClass='ob-runnerup';
+    sub=`You cleaned ${pct}% with some scrutiny generated but no arrest. You survived — but a trail exists. In a real investigation, this evidence would be enough to build a case.`;
+  } else if(state.cards.red>0){
+    outcome='🟥 Red Card';title='Eliminated';badgeClass='ob-eliminated';
+    sub=`Scrutiny hit ${state.heat}%. Assets frozen. Investigation opened. You cleaned ${pct}% before the system caught up — but the arrest ends everything. This is how most real cases conclude.`;
+  } else {
+    outcome='🟡 Under Investigation';title='Flagged';badgeClass='ob-investigated';
+    sub=`You cleaned ${pct}% but generated ${state.heat}% scrutiny across ${SCENES.length} rounds. SARs have been filed. The NCA is reviewing. Not arrested — yet. The window is closing.`;
+  }
+
+  const choiceNames=state.choices.map((ci,si)=>SCENES[si].choices[ci].name).join(' → ');
+  window._shareResult={outcome,pct,efficiency,heat:state.heat,juris:j.name,choiceNames};
+
+  document.getElementById('e-badge').innerHTML=`<div class="outcome-badge ${badgeClass}">${outcome}</div>`;
+  document.getElementById('e-title').innerHTML=title;
+  document.getElementById('e-sub').textContent=sub;
+  document.getElementById('e-score').innerHTML=`
+    <div class="score-card"><div class="score-lbl">Cleaned</div><div class="score-val" style="color:var(--grn)">${pct}%</div></div>
+    <div class="score-card"><div class="score-lbl">Scrutiny</div><div class="score-val" style="color:var(--gold)">${state.heat}%</div></div>
+    <div class="score-card"><div class="score-lbl">Efficiency</div><div class="score-val" style="color:var(--wht)">${efficiency}</div></div>
+    <div class="score-card"><div class="score-lbl">Cards</div><div class="score-val" style="color:var(--red)">${state.cards.yellow}Y ${state.cards.red}R</div></div>`;
+  document.getElementById('e-learning').innerHTML=`
+    <div style="padding-bottom:12px;border-bottom:1px solid var(--bor)">
+      <div style="font-family:var(--fm);font-size:9px;letter-spacing:.14em;color:var(--dim);margin-bottom:14px;text-transform:uppercase">// Your Route</div>
+      <div style="font-size:13px;color:var(--sub);line-height:2">${state.choices.map((ci,si)=>`<span style="color:var(--gold)">${ROUNDS[si].short}</span> ${SCENES[si].choices[ci].name}`).join(' &nbsp;→&nbsp; ')}</div>
+    </div>`;
+  window.scrollTo(0,0);
+}
+
+function shareResult(){
+  const r=window._shareResult;if(!r)return;
+  const text=`Just played Clean Sheet — the FIFA World Cup Financial Crime Simulator.\n\nOutcome: ${r.outcome}\nJurisdiction: ${r.juris}\nCleaned: ${r.pct}% · Scrutiny: ${r.heat}% · Efficiency: ${r.efficiency}\n\nRoute: ${r.choiceNames}\n\nBuilt by Nikhil Shinde — KYC/AML Product Specialist.\n\nPlay it: https://nikkiill.github.io/AML-Laundromat-Game/`;
+  navigator.clipboard.writeText(text).then(()=>{
+    const t=document.getElementById('copy-toast');
+    t.style.opacity='1';
+    setTimeout(()=>t.style.opacity='0',2800);
+  });
+}
+
+function startGame(){
+  document.getElementById('intro').style.display='none';
+  document.getElementById('game').style.display='block';
+  renderScene();
+}
+
+function resetGame(){
+  stopTimer();
+  const juris=state.juris;
+  state={scene:0,heat:0,dirty:1000000,clean:0,cards:{yellow:0,red:0},choices:[],juris,varShown:false};
+  document.getElementById('end').style.display='none';
+  document.getElementById('game').style.display='block';
+  renderScene();
+}
+
+function goHome(){
+  stopTimer();
+  state={scene:0,heat:0,dirty:1000000,clean:0,cards:{yellow:0,red:0},choices:[],juris:state.juris,varShown:false};
+  document.getElementById('game').style.display='none';
+  document.getElementById('end').style.display='none';
+  document.getElementById('intro').style.display='flex';
+  renderJurisGrid();
+}
+
+function goBack(){
+  if(state.scene===0)return;
+  stopTimer();
+  state.scene--;
+  const prevChoiceIdx=state.choices.pop();
+  const prevChoice=SCENES[state.scene].choices[prevChoiceIdx];
+  const j=JURISDICTIONS[state.juris];
+  const prevHeat=Math.min(Math.round(prevChoice.heat*j.mult),65);
+  state.heat=Math.max(0,state.heat-prevHeat);
+  state.dirty+=prevChoice.amount;
+  state.clean-=prevChoice.amount;
+  if(state.heat<85&&state.cards.red>0)state.cards.red=0;
+  if(state.heat<60&&state.cards.yellow>0)state.cards.yellow=0;
+  if(state.heat<65)state.varShown=false;
+  renderScene();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+renderJurisGrid();
+</script>
+</body>
+</html>
